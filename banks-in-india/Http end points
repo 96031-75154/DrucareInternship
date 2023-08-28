@@ -1,0 +1,8 @@
+save record     ------->>>>>    localhost:8080/bank  (post)
+Fetch all     --------->>>>>    localhost:8080/bank/getAll  (get)
+Delete record     ----->>>>>    localhost:8080/bank/{ifscCode}  (delete)
+Fetch by ifsccode ----->>>>>    localhost:8080/bank/{ifscCode}  (get)
+Update record    ------>>>>>    localhost:8080/bank/update  (put)
+Pagination      ------->>>>>    localhost:8080/bank/page    (get)
+Fetch list by name ---->>>>>    localhost:8080/bank/bankList/{bankName}  (get)
+Fetch ifsc list by bank name -->localhost:8080/bank/ifsc/{name}    (get)
