@@ -1,0 +1,438 @@
+create table patient_info (
+	patient_id BIGSERIAL PRIMARY KEY,
+	org_id BIGINT,
+    first_nm VARCHAR(20),
+    middle_nm VARCHAR(10),
+    last_nm VARCHAR(20),
+    gender VARCHAR(10),
+    age INTEGER,
+	weight INTEGER,
+    blood_gp VARCHAR(5),
+    mobile_no VARCHAR(15),
+    pincode VARCHAR(10),
+    city_nm VARCHAR(20),
+	state_nm VARCHAR(20),
+	create_dttm TIMESTAMP DEFAULT NOW(),
+    version_id INT DEFAULT 1,
+    modified_dttm TIMESTAMP,
+    isactive BOOLEAN DEFAULT TRUE
+);
+---------------------------------------------------------------
+CREATE TABLE emp_info_ref (
+    org_id BIGINT,
+    emp_id BIGSERIAL PRIMARY KEY,
+    first_nm VARCHAR(20),
+    middle_nm VARCHAR(10),
+    last_nm VARCHAR(20),
+    gender VARCHAR(10),
+    birth_dt DATE,
+    age INTEGER,
+    blood_gp VARCHAR(5),
+    religion VARCHAR(15),
+    salary NUMERIC(10,2),
+    mobile_no VARCHAR(15),
+    email VARCHAR(30),
+    pincode VARCHAR(10),
+    street_nm VARCHAR(20),
+    city_nm VARCHAR(20),
+    country_nm VARCHAR(20),
+    create_dttm TIMESTAMP DEFAULT NOW(),
+    version_id INT DEFAULT 1,
+    modified_dttm TIMESTAMP,
+    isactive BOOLEAN DEFAULT TRUE
+);
+---------------------------------------------------------------
+INSERT INTO emp_info_ref (
+    first_nm,
+    middle_nm,
+    last_nm,
+    gender,
+    birth_dt,
+    age,
+    blood_gp,
+    religion,
+    salary,
+    mobile_no,
+    email,
+    pincode,
+    street_nm,
+    city_nm,
+    country_nm
+) VALUES (
+    'James',
+    'Edward',
+    'Jonty',
+    'Male',
+    '1995-01-15',
+    28,
+    'O-',
+    'Christian',
+    63000.00,
+    '5634758479',
+    'james88@gmail.com',
+    '745475',
+    'Rainbow Colony',
+    'Eta Nagar',
+    'Arunachal Pradesh'
+);
+---------------------------------------------------------------
+CREATE TABLE emp_dept_xref (
+    emp_dept_id BIGSERIAL PRIMARY KEY,
+    emp_id BIGINT,
+    dept_id BIGINT,
+    org_id BIGINT,
+    create_dttm TIMESTAMP DEFAULT NOW(),
+    version_id INT DEFAULT 1,
+    modified_dttm TIMESTAMP,
+    isactive BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (emp_id) REFERENCES emp_info_ref(emp_id),
+    FOREIGN KEY (dept_id) REFERENCES department_ref(dept_id)
+);
+---------------------------------------------------------------
+SELECT gender, blood_gp, COUNT(*) as employee_count
+FROM emp_info_ref
+GROUP BY gender, blood_gp;
+---------------------------------------------------------------
+SELECT age, AVG(salary) as average_salary
+FROM emp_info_ref
+GROUP BY age;
+---------------------------------------------------------------
+SELECT religion, MAX(age) as max_age
+FROM emp_info_ref
+GROUP BY religion;
+---------------------------------------------------------------
+SELECT city_nm, SUM(salary) as total_salary
+FROM emp_info_ref
+GROUP BY city_nm;
+---------------------------------------------------------------
+SELECT age, AVG(salary) as average_salary
+FROM emp_info_ref
+GROUP BY age
+HAVING AVG(salary) > 50000;
+---------------------------------------------------------------
+SELECT blood_gp, COUNT(*) as employee_count
+FROM emp_info_ref
+GROUP BY blood_gp
+HAVING COUNT(*) > 2;
+---------------------------------------------------------------
+SELECT religion, MAX(age) as max_age
+FROM emp_info_ref
+GROUP BY religion
+HAVING MAX(age) > 30;
+---------------------------------------------------------------
+SELECT city_nm, SUM(salary) as total_salary
+FROM emp_info_ref
+GROUP BY city_nm
+HAVING SUM(salary) > 65000;
+---------------------------------------------------------------
+SELECT 
+    e1.first_nm AS employee1_first_name,
+    e1.last_nm AS employee1_last_name,
+    e2.first_nm AS employee2_first_name,
+    e2.last_nm AS employee2_last_name
+FROM emp_info_ref e1
+INNER JOIN emp_info_ref e2 ON e1.blood_gp = e2.blood_gp
+WHERE e1.emp_id < e2.emp_id;
+---------------------------------------------------------------
+select *
+from emp_info_ref
+order by emp_id
+limit 4 offset 5;
+---------------------------------------------------------------
+select *
+from emp_info_ref
+order by emp_id
+offset 10;
+---------------------------------------------------------------
+select distinct
+city_nm, country_nm
+from emp_info_ref;
+---------------------------------------------------------------
+select distinct
+blood_gp, gender
+from emp_info_ref;
+---------------------------------------------------------------
+select first_nm, last_nm, salary
+from emp_info_ref
+where salary < (select avg(salary) from emp_info_ref);
+---------------------------------------------------------------
+select first_nm, city_nm, country_nm
+from emp_info_ref
+where emp_id in (select emp_id from emp_info_ref where first_nm like 'R%');
+---------------------------------------------------------------
+select first_nm, gender, create_dttm
+from emp_info_ref
+where age in (select age from emp_info_ref where age between 31 and 35);
+---------------------------------------------------------------
+select
+substring(first_nm || last_nm, 1, 8) as emp_names, gender, city_nm
+from emp_info_ref
+order by first_nm;
+---------------------------------------------------------------
+select first_nm, middle_nm, last_nm, gender, birth_dt, age, blood_gp, religion, salary, mobile_no, email, pincode, street_nm, city_nm, country_nm from emp_info_ref
+where org_id=1111 and isactive='true' and concat(first_nm, ' ',middle_nm, ' ', last_nm) ilike '%'||'Harry'||'%';
+---------------------------------------------------------------
+select *
+from emp_info_ref
+order by emp_id
+fetch first 3 row only;
+---------------------------------------------------------------
+select string_agg(street_nm||', '||city_nm||', '||country_nm, ' & ') as combined_string, avg(salary)
+from emp_info_ref
+group by salary
+having salary > 45000;
+---------------------------------------------------------------
+select string_agg(distinct concat(first_nm, ' ', middle_nm, ' ', last_nm), ' | ') as combined_string, count(distinct city_nm)
+from emp_info_ref
+group by city_nm
+having count(city_nm) > 1;
+---------------------------------------------------------------
+select first_nm, last_nm,
+case
+when city_nm = 'Banglore' then 'Matched'
+when country_nm = 'India' then 'Matched'
+else 'unknown'
+end as end_result
+from emp_info_ref;
+---------------------------------------------------------------
+select
+sum(case when city_nm = 'Hyderabad' then 1 else 0 end) as count_condition_true,
+sum(case when street_nm = 'Roberts Colony' then 1 else 0 end) as count_condition_false
+from
+emp_info_ref;
+---------------------------------------------------------------
+update emp_info_ref
+set first_nm=
+case
+when first_nm='Edward' then 'Tyson'
+else first_nm
+end
+where middle_nm='Willey';
+---------------------------------------------------------------
+select e1.first_nm, e1.last_nm, d1.dept_nm,
+case
+when e1.city_nm = 'Hyderabad' then 'Condition met'
+else 'Condition not met'
+end as condition_result
+from emp_info_ref e1
+inner join department_ref d1 on e1.emp_id = d1.dept_id;
+---------------------------------------------------------------
+select count(*) as total_employees, blood_gp, max(salary) filter (where city_nm in ('Punjab', 'Bhuvaneshwar', 'Banglore'))
+from emp_info_ref
+group by blood_gp;
+---------------------------------------------------------------
+select eir.emp_id, concat(first_nm,' ',middle_nm,' ',last_nm) emp_nm, eir.email, eir.mobile_no, eir.salary, eir.gender, eir.pincode, eir.street_nm, eir.city_nm, eir.country_nm,
+edx.dept_id, dr.dept_nm, edx.emp_dept_id
+from emp_info_ref eir
+join public.emp_dept_xref edx on eir.emp_id=edx.emp_id and edx.isactive=true
+join public.department_ref dr on edx.dept_id=dr.dept_id
+where eir.isactive=true and eir.org_id=1111
+order by eir.emp_id;
+---------------------------------------------------------------
+select e.first_nm, e.gender, e.salary, count(e.emp_id) emp_count, e.city_nm, d.dept_nm
+from emp_info_ref e
+left join emp_dept_xref edx on e.emp_id = edx.emp_id
+left join department_ref d on d.dept_id = edx.dept_id
+where e.salary > 50000.00
+group by e.emp_id, d.dept_nm
+order by e.emp_id desc;
+---------------------------------------------------------------
+select d.dept_nm, e.gender
+from emp_info_ref e
+join emp_dept_xref edx on e.emp_id = edx.emp_id
+join department_ref d on d.dept_id = edx.dept_id
+where e.org_id = 1111 and e.isactive = 'true'
+order by d.dept_nm;
+---------------------------------------------------------------
+SELECT
+    e.emp_id, e.first_nm, e.gender, e.city_nm, e.country_nm, e.create_dttm
+FROM
+    emp_info_ref e
+LEFT JOIN
+    emp_dept_xref edx
+ON e.emp_id = edx.emp_id
+WHERE edx.emp_id IS NULL
+ORDER BY e.emp_id DESC;
+---------------------------------------------------------------
+SELECT e.emp_id, e.first_nm, d.dept_nm
+FROM emp_info_ref e
+JOIN emp_dept_xref edx ON edx.emp_id = e.emp_id
+JOIN department_ref d ON edx.dept_id = d.dept_id
+order by e.emp_id;
+---------------------------------------------------------------
+SELECT emp_id, concat(first_nm, ' ', middle_nm, ' ', last_nm) emp_nm
+FROM emp_info_ref
+UNION
+SELECT dept_id, dept_nm
+FROM department_ref
+order by emp_id;
+---------------------------------------------------------------
+SELECT
+    d.dept_id,
+    d.dept_nm,
+    (SELECT AVG(e.age)
+     FROM emp_info_ref e
+     WHERE e.emp_id IN (
+         SELECT edx.emp_id
+         FROM emp_dept_xref edx
+         WHERE edx.dept_id = d.dept_id
+     )
+    ) average_age
+FROM
+    department_ref d;
+---------------------------------------------------------------
+select d.dept_nm, e.gender, count(e.emp_id) emp_count
+from emp_info_ref e
+join emp_dept_xref edx on e.emp_id = edx.emp_id
+join department_ref d on d.dept_id = edx.dept_id
+where e.org_id = 1111 and e.isactive = 'true'
+group by d.dept_nm, e.gender
+order by d.dept_nm;
+---------------------------------------------------------------
+select e.emp_id, e.first_nm, e.gender, e.age, e.city_nm, e.country_nm, d.dept_nm
+from emp_info_ref e
+join emp_dept_xref edx
+on e.emp_id = edx.emp_id
+join department_ref d
+on d.dept_id = edx.dept_id
+union
+select s.emp_id, s.first_nm, s.gender, s.age, s.city_nm, s.country_nm, dp.dept_nm
+from emp_info_ref s
+join emp_dept_xref edxf
+on s.emp_id = edxf.emp_id
+join department_ref dp
+on dp.dept_id = edxf.dept_id;
+---------------------------------------------------------------
+SELECT e.emp_id, concat(e.first_nm, ' ', e.middle_nm, ' ', e.last_nm) emp_nm, e.gender, e.age, e.salary, e.mobile_no, e.email, e.city_nm, e.country_nm, e.org_id, d.dept_nm,
+    CASE
+        WHEN e.age < 18 THEN 'Under 18'
+        WHEN e.age >= 18 AND e.age < 30 THEN '18-29'
+        WHEN e.age >= 30 AND e.age < 40 THEN '30-39'
+        WHEN e.age >= 40 AND e.age < 50 THEN '40-49'
+        ELSE '50 and Above'
+    END age_group
+FROM emp_info_ref e
+LEFT JOIN department_ref d ON e.emp_id = d.dept_id
+ORDER BY e.emp_id;
+---------------------------------------------------------------
+SELECT
+    d.dept_id,
+    d.dept_nm,
+    COUNT(DISTINCT e.emp_id) employee_count
+FROM
+    department_ref d
+LEFT JOIN
+    emp_dept_xref edx
+ON d.dept_id = edx.dept_id
+LEFT JOIN
+    emp_info_ref e
+ON edx.emp_id = e.emp_id
+GROUP BY d.dept_id, d.dept_nm
+ORDER BY d.dept_id;
+---------------------------------------------------------------
+SELECT
+    d.dept_id,
+    d.dept_nm,
+    SUM(e.salary) total_salary_expenditure
+FROM
+    department_ref d
+LEFT JOIN
+    emp_dept_xref edx
+ON d.dept_id = edx.dept_id
+LEFT JOIN
+    emp_info_ref e
+ON edx.emp_id = e.emp_id
+GROUP BY d.dept_id, d.dept_nm
+ORDER BY total_salary_expenditure DESC
+LIMIT 1;
+---------------------------------------------------------------
+SELECT
+    d.dept_id,
+    d.dept_nm,
+    (
+        SELECT
+            CONCAT(e.first_nm, ' ', e.middle_nm, ' ', e.last_nm) emp_nm
+        FROM emp_info_ref e
+        WHERE e.emp_id IN (
+            SELECT edx.emp_id
+            FROM emp_dept_xref edx
+            WHERE edx.dept_id = d.dept_id
+        )
+        ORDER BY e.salary DESC
+        LIMIT 1
+    ) highest_paid_employee
+FROM department_ref d;
+---------------------------------------------------------------
+SELECT 
+	d.dept_id,
+	d.dept_nm,
+	AVG(e.age) average_age
+FROM
+	department_ref d
+LEFT JOIN
+	emp_dept_xref edx
+ON d.dept_id = edx.dept_id
+LEFT JOIN
+	emp_info_ref e
+ON edx.emp_id = e.emp_id
+GROUP BY d.dept_id, d.dept_nm
+ORDER BY d.dept_id;
+---------------------------------------------------------------
+select e.emp_id, e.first_nm, e.age, e.city_nm, e.country_nm, d.dept_id, d.dept_nm, edx.create_dttm, edx.version_id, edx.org_id
+from (
+select distinct(e.emp_id), e.last_nm, e.email, e.mobile_no, d.dept_id, d.dept_nm
+	from emp_info_ref e
+	left join emp_dept_xref edx
+	on e.emp_id = edx.dept_id
+	left join department_ref d ON d.dept_id = edx.dept_id
+) e_edx
+left join emp_dept_xref edx
+on e_edx.emp_id = edx.emp_id
+join emp_info_ref e
+on e.emp_id = edx.emp_id
+join department_ref d
+on edx.dept_id = d.dept_id;
+---------------------------------------------------------------
+SELECT
+    e.emp_id, e.first_nm, e.last_nm, e.gender, e.age, e.salary, e.mobile_no, e.email, e.city_nm, e.country_nm, e.org_id, d.dept_id, d.dept_nm,
+    edx.emp_dept_id,
+    edx.create_dttm emp_dept_create_dttm,
+    edx.version_id emp_dept_version,
+    edx.org_id emp_dept_org_id
+FROM
+    (
+        SELECT
+            distinct(e.emp_id), e.first_nm, e.last_nm, e.gender, e.age, e.salary, e.mobile_no, e.email, e.city_nm, e.country_nm, e.org_id,
+            CASE
+                WHEN e.age < 18 THEN 'Under 18'
+                WHEN e.age >= 18 AND e.age < 30 THEN '18-29'
+                WHEN e.age >= 30 AND e.age < 40 THEN '30-39'
+                WHEN e.age >= 40 AND e.age < 50 THEN '40-49'
+                ELSE '50 and Above'
+            END age_group
+        FROM emp_info_ref e
+		where e.emp_id > 40
+    ) e
+LEFT JOIN
+    (
+        SELECT
+            d.dept_id,
+            d.dept_nm
+        FROM department_ref d
+    ) AS d
+ON e.emp_id = d.dept_id
+LEFT JOIN
+    (
+        SELECT
+			edx.emp_id,
+            edx.emp_dept_id,
+            edx.create_dttm,
+            edx.version_id,
+            edx.org_id
+        FROM emp_dept_xref edx
+    ) edx
+ON e.emp_id = edx.emp_id
+order by e.emp_id
+limit 5
+offset 10;
+---------------------------------------------------------------
